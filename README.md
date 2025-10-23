@@ -29,5 +29,7 @@ The project automatically adapts to your system dark mode and updates vehicle lo
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/tallinn-transport-map.git
-cd tallinn-transport-map
+git clone https://github.com/underoot/teele-on-mapbox.git
+cd teele-on-mapbox
+npx vite
+```
