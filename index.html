@@ -46,6 +46,8 @@
       [type.REGIONALBUS]: "#5C6BC0"
     };
 
+    const minimalMapPitch = 45;
+
     function getVehicleColorExpression(isDark) {
       const colors = isDark ? typeDarkColor : typeColor;
       return ["match", ["get", "type"], ...Object.keys(colors).map(t => [Number(t), typeColor[t]]).flat(), "#000"];
@@ -135,7 +137,7 @@
 
       function updatePitchAlignment() {
         const pitch = map.getPitch();
-        const alignment = pitch > 60 ? "viewport" : "map";
+        const alignment = pitch > minimalMapPitch ? "viewport" : "map";
         map.setLayoutProperty("vehicle", "icon-pitch-alignment", alignment);
       }
 
