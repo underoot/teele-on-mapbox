@@ -111,7 +111,6 @@
         layout: {
           "icon-rotation-alignment": "map",
           "icon-offset": [0.5, -3.5],
-          "font-weight": "bold",
           "text-size": 12,
           "text-field": ["get", "line"],
           "icon-rotate": ["get", "direction"],
@@ -133,6 +132,14 @@
         );
         map.setConfigProperty("basemap", "lightPreset", isDark ? "night" : "day")
       });
+
+      function updatePitchAlignment() {
+        const pitch = map.getPitch();
+        const alignment = pitch > 60 ? "viewport" : "map";
+        map.setLayoutProperty("vehicle", "icon-pitch-alignment", alignment);
+      }
+
+      map.on("pitch", updatePitchAlignment);
     });
 
     map.once('load', () => {
