@@ -101,7 +101,7 @@
         type: "symbol",
         source: "gis",
         paint: {
-          "text-color": prefersDark ? "#fff" : "#000"
+          "text-color": "#fff"
         },
         layout: {
           "icon-offset": [1.25, -4],
@@ -124,11 +124,6 @@
           "vehicle",
           "icon-image",
           getImageExpression(isDark)
-        );
-        map.setPaintProperty(
-          "vehicle",
-          "text-color",
-          isDark ? "#fff" : "#000"
         );
         map.setConfigProperty("basemap", "lightPreset", isDark ? "night" : "day")
       });
