@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tallinn Transport Map</title>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.16.0/mapbox-gl.css" />
+</head>
+<body>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.16.0/mapbox-gl.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+  <div id="map" style="width: 100vw; height: 100vh"></div>
+  <script>
+    mapboxgl.accessToken = "";
+
+    const RELOAD_INTERVAL = 5000;
+
+    const type = {
+      TROLLEYBUS: 1,
+      BUS: 2,
+      TRAM: 3,
+      BUSQ: 7,
+      TRAIN: 10,
+      REGIONALBUS: 20
+    }
+
+    const typeColor = {
+      [type.TROLLEYBUS]: "#2196F3",
+      [type.BUS]: "#096",
+      [type.TRAM]: "#e11d48",
+      [type.BUSQ]: "#eab308",
+      [type.TRAIN]: "#f59e0b",
+      [type.REGIONALBUS]: "#1d4ed8"
+    };
+
+    const typeDarkColor = {
+      [type.TROLLEYBUS]: "#64B5F6",
+      [type.BUS]: "#26A69A",
+      [type.TRAM]: "#F06292",
+      [type.BUSQ]: "#FFD54F",
+      [type.TRAIN]: "#FFB74D",
+      [type.REGIONALBUS]: "#5C6BC0"
+    };
+
+    function getVehicleColorExpression(isDark) {
+      const colors = isDark ? typeDarkColor : typeColor;
+      return ["match", ["get", "type"], ...Object.keys(colors).map(t => [Number(t), typeColor[t]]).flat(), "#000"];
+    }
+
+    function getImageExpression(isDark) {
+      return [
+        "image",
+        "transport",
+        { params: { color: getVehicleColorExpression(isDark) } }
+      ];
+    }
+
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      center: [24.75353, 59.43696],
+      style: "mapbox://styles/underoot/cmh3tiebt001s01s92por9co0",
+      zoom: 12,
+      config: {
+        basemap: {
+          lightPreset: prefersDark ? "night" : "day"
+        }
+      },
+      hash: true
+    });
+
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: {
+          enableHighAccuracy: true
+      },
+      trackUserLocation: true,
+      showUserHeading: true
+    })
+
+    map.addControl(geolocate);
+
+    function getData() {
+      return fetch(`https://gis.ee/tallinn/gps.php?ver=${Date.now()}`).then(b => b.json());
+    }
+
+    map.once("style.load", async () => {
+      const data = await getData();
+
+      map.addSource("gis", {
+        type: "geojson",
+        data,
+      });
+
+      map.addLayer({
+        id: "vehicle",
+        type: "symbol",
+        source: "gis",
+        paint: {
+          "text-color": prefersDark ? "#fff" : "#000"
+        },
+        layout: {
+          "icon-offset": [1.25, -4],
+          "font-weight": "bold",
+          "text-size": 12,
+          "text-field": ["get", "line"],
+          "icon-rotate": ["get", "direction"],
+          "icon-image": getImageExpression(prefersDark)
+        }
+      })
+
+      setInterval(async () => {
+        map.getSource("gis").setData(await getData());
+      }, RELOAD_INTERVAL);
+
+      const darkModeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+      darkModeMedia.addEventListener("change", (e) => {
+        const isDark = e.matches;
+        map.setLayoutProperty(
+          "vehicle",
+          "icon-image",
+          getImageExpression(isDark)
+        );
+        map.setPaintProperty(
+          "vehicle",
+          "text-color",
+          isDark ? "#fff" : "#000"
+        );
+        map.setConfigProperty("basemap", "lightPreset", isDark ? "night" : "day")
+      });
+    });
+
+    map.once('load', () => {
+      geolocate.trigger();
+    });
+  </script>
+</body>
+</html>
